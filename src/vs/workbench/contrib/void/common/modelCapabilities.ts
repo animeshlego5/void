@@ -132,6 +132,7 @@ export const defaultModelsOfProvider = {
 	mistral: [ // https://docs.mistral.ai/getting-started/models/models_overview/
 		'codestral-latest',
 		'mistral-large-latest',
+		'mistral-medium-latest',
 		'ministral-3b-latest',
 		'ministral-8b-latest',
 	],
@@ -158,6 +159,8 @@ export type VoidStaticModelInfo = { // not stateful
 	supportsSystemMessage: false | 'system-role' | 'developer-role' | 'separated'; // typically you should use 'system-role'. 'separated' means the system message is passed as a separate field (e.g. anthropic)
 	specialToolFormat?: 'openai-style' | 'anthropic-style' | 'gemini-style', // typically you should use 'openai-style'. null means "can't call tools by default", and asks the LLM to output XML in agent mode
 	supportsFIM: boolean; // whether the model was specifically designed for autocomplete or "FIM" ("fill-in-middle" format)
+
+	additionalOpenAIPayload?: { [key: string]: string } // additional payload in the message body for requests that are openai-compatible (ollama, vllm, openai, openrouter, etc)
 
 	// reasoning options
 	reasoningCapabilities: false | {
@@ -192,7 +195,13 @@ export type VoidStaticModelInfo = { // not stateful
 
 
 export type ModelOverrides = Pick<VoidStaticModelInfo,
-	'contextWindow' | 'reservedOutputTokenSpace' | 'specialToolFormat' | 'supportsSystemMessage' | 'supportsFIM' | 'reasoningCapabilities'
+	| 'contextWindow'
+	| 'reservedOutputTokenSpace'
+	| 'specialToolFormat'
+	| 'supportsSystemMessage'
+	| 'supportsFIM'
+	| 'reasoningCapabilities'
+	| 'additionalOpenAIPayload'
 >
 
 
@@ -788,13 +797,7 @@ const geminiModelOptions = { // https://ai.google.dev/gemini-api/docs/pricing
 		supportsFIM: false,
 		supportsSystemMessage: 'separated',
 		specialToolFormat: 'gemini-style',
-		reasoningCapabilities: { // thinking: experimental as of 5-10-25
-			supportsReasoning: true,
-			canTurnOffReasoning: true,
-			canIOReasoning: false,
-			reasoningSlider: { type: 'budget_slider', min: 1024, max: 8192, default: 1024 }, // max is really 24576
-			reasoningReservedOutputTokenSpace: 8192,
-		},
+		reasoningCapabilities: false,
 	},
 	'gemini-2.0-flash-lite-preview-02-05': {
 		contextWindow: 1_048_576,
@@ -884,6 +887,15 @@ const mistralModelOptions = { // https://mistral.ai/products/la-plateforme#prici
 		cost: { input: 2.00, output: 6.00 },
 		supportsFIM: false,
 		downloadable: { sizeGb: 73 },
+		supportsSystemMessage: 'system-role',
+		reasoningCapabilities: false,
+	},
+	'mistral-medium-latest': { // https://openrouter.ai/mistralai/mistral-medium-3
+		contextWindow: 131_000,
+		reservedOutputTokenSpace: 8_192,
+		cost: { input: 0.40, output: 2.00 },
+		supportsFIM: false,
+		downloadable: { sizeGb: 'not-known' },
 		supportsSystemMessage: 'system-role',
 		reasoningCapabilities: false,
 	},
